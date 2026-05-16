@@ -1,0 +1,103 @@
+{
+  "project_info": {
+    "project_number": "1053943643595",
+    "project_id": "brave-dimension-388220",
+    "storage_bucket": "brave-dimension-388220.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1053943643595:android:6da14d9a129bbfe72fca4e",
+        "android_client_info": {
+          "package_name": "com.example.food_delivery_driver"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwWQxU6A6qa0NarwexBZvZ-CUFH_Iq_Zg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1053943643595-ep1rfane46h8u794pd8t79a6gaaj4ag2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1053943643595-at46p3ectdmnhrhgcr1s534s7b4nse3l.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.meezResApp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1053943643595:android:83914e4618585d0c2fca4e",
+        "android_client_info": {
+          "package_name": "com.example.meez_res_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwWQxU6A6qa0NarwexBZvZ-CUFH_Iq_Zg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1053943643595-ep1rfane46h8u794pd8t79a6gaaj4ag2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1053943643595-at46p3ectdmnhrhgcr1s534s7b4nse3l.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.meezResApp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1053943643595:android:e81ff62fb214e3352fca4e",
+        "android_client_info": {
+          "package_name": "com.example.meez_user_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwWQxU6A6qa0NarwexBZvZ-CUFH_Iq_Zg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1053943643595-ep1rfane46h8u794pd8t79a6gaaj4ag2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1053943643595-at46p3ectdmnhrhgcr1s534s7b4nse3l.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.meezResApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
