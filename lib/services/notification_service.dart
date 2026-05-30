@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart' show Color;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -15,30 +16,33 @@ class NotificationService {
   bool _initialized = false;
   Timer? _alertTimer;
 
+  bool get _isWindows => Platform.isWindows;
+  bool get _isAndroid => Platform.isAndroid;
+
   Future<void> init() async {
     if (_initialized) return;
 
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const initSettings = InitializationSettings(android: androidSettings);
-    await _notifications.initialize(initSettings);
+    if (_isAndroid) {
+      const androidSettings =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const initSettings = InitializationSettings(android: androidSettings);
+      await _notifications.initialize(initSettings);
 
-    const channel = AndroidNotificationChannel(
-      'new_orders',
-      'طلبات جديدة',
-      description: 'إشعارات الطلبات الواردة',
-      importance: Importance.max,
-      playSound: true,
-      enableVibration: true,
-      enableLights: true,
-    );
-
-    final androidPlugin = _notifications
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
-
-    await androidPlugin?.createNotificationChannel(channel);
-    await androidPlugin?.requestNotificationsPermission();
+      const channel = AndroidNotificationChannel(
+        'new_orders',
+        'طلبات جديدة',
+        description: 'إشعارات الطلبات الواردة',
+        importance: Importance.max,
+        playSound: true,
+        enableVibration: true,
+        enableLights: true,
+      );
+      final androidPlugin = _notifications
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      await androidPlugin?.createNotificationChannel(channel);
+      await androidPlugin?.requestNotificationsPermission();
+    }
 
     _initialized = true;
   }
@@ -48,39 +52,42 @@ class NotificationService {
     required String customerName,
     required double total,
   }) async {
-    // إيقاف أي تنبيه سابق لم ينته بعد
     await stopAlert();
 
-    // إشعار في شريط الحالة (مرة واحدة كافية)
     try {
-      final details = AndroidNotificationDetails(
-        'new_orders',
-        'طلبات جديدة',
-        channelDescription: 'إشعارات الطلبات الواردة',
-        importance: Importance.max,
-        priority: Priority.high,
-        playSound: true,
-        enableVibration: true,
-        enableLights: true,
-        color: const Color(0xFF1A237E),
-        ledColor: const Color(0xFF1A237E),
-        ledOnMs: 500,
-        ledOffMs: 500,
-        ticker: 'طلب جديد',
-        icon: '@mipmap/ic_launcher',
-        // إبقاء الإشعار 30 ثانية ثم يختفي تلقائياً
-        timeoutAfter: 30000,
-      );
-
-      await _notifications.show(
-        orderId.hashCode,
-        'طلب جديد',
-        '$customerName — ${total.toStringAsFixed(0)} IQD',
-        NotificationDetails(android: details),
-      );
+      if (_isWindows) {
+        // Windows toast via PowerShell — no extra package needed
+        _showWindowsToast(
+          'طلب جديد!',
+          '$customerName — ${total.toStringAsFixed(0)} IQD',
+        );
+      } else if (_isAndroid) {
+        final details = AndroidNotificationDetails(
+          'new_orders',
+          'طلبات جديدة',
+          channelDescription: 'إشعارات الطلبات الواردة',
+          importance: Importance.max,
+          priority: Priority.high,
+          playSound: true,
+          enableVibration: true,
+          enableLights: true,
+          color: const Color(0xFFFCC050),
+          ledColor: const Color(0xFFFCC050),
+          ledOnMs: 500,
+          ledOffMs: 500,
+          ticker: 'طلب جديد',
+          icon: '@mipmap/ic_launcher',
+          timeoutAfter: 30000,
+        );
+        await _notifications.show(
+          orderId.hashCode,
+          'طلب جديد',
+          '$customerName — ${total.toStringAsFixed(0)} IQD',
+          NotificationDetails(android: details),
+        );
+      }
     } catch (_) {}
 
-    // صوت + اهتزاز يتكرران كل 3 ثوانٍ لمدة 30 ثانية
     final stopAt = DateTime.now().add(const Duration(seconds: 30));
 
     Future<void> playOnce() async {
@@ -88,18 +95,18 @@ class NotificationService {
         await _audio.stop();
         await _audio.play(AssetSource('sounds/new_order.wav'));
       } catch (_) {}
-      try {
-        final hasVibrator = await Vibration.hasVibrator();
-        if (hasVibrator) {
-          await Vibration.vibrate(pattern: [0, 400, 200, 400, 200, 400]);
-        }
-      } catch (_) {}
+      if (_isAndroid) {
+        try {
+          final hasVibrator = await Vibration.hasVibrator();
+          if (hasVibrator == true) {
+            Vibration.vibrate(pattern: [0, 400, 200, 400, 200, 400]);
+          }
+        } catch (_) {}
+      }
     }
 
-    // تشغيل فوري
     await playOnce();
 
-    // تكرار كل 3 ثوانٍ حتى انتهاء المدة
     _alertTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
       if (DateTime.now().isAfter(stopAt)) {
         await stopAlert();
@@ -109,14 +116,30 @@ class NotificationService {
     });
   }
 
+  void _showWindowsToast(String title, String body) {
+    // Fire-and-forget PowerShell toast — no extra package needed
+    final script =
+        '[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType=WindowsRuntime] | Out-Null;'
+        '[Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom, ContentType=WindowsRuntime] | Out-Null;'
+        r'$xml = New-Object Windows.Data.Xml.Dom.XmlDocument;'
+        r'$xml.LoadXml("<toast><visual><binding template=""ToastGeneric"">'
+        '<text>$title</text><text>$body</text>'
+        r'</binding></visual></toast>");'
+        r'$toast = [Windows.UI.Notifications.ToastNotification]::new($xml);'
+        r'[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Meez POS").Show($toast);';
+    Process.run('powershell', ['-Command', script]);
+  }
+
   Future<void> stopAlert() async {
     _alertTimer?.cancel();
     _alertTimer = null;
     try {
       await _audio.stop();
     } catch (_) {}
-    try {
-      await Vibration.cancel();
-    } catch (_) {}
+    if (_isAndroid) {
+      try {
+        Vibration.cancel();
+      } catch (_) {}
+    }
   }
 }

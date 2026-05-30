@@ -45,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     return Scaffold(
-      backgroundColor: AppTheme.primary,
+      backgroundColor: AppTheme.background,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -69,33 +69,34 @@ class _LoginScreenState extends State<LoginScreen> {
           width: 90,
           height: 90,
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            color: AppTheme.primary,
+            borderRadius: BorderRadius.circular(22),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withAlpha(50),
-                blurRadius: 20,
+                color: AppTheme.primary.withValues(alpha: 0.4),
+                blurRadius: 24,
                 offset: const Offset(0, 8),
               ),
             ],
           ),
-          child: const Icon(Icons.restaurant_menu, size: 50, color: AppTheme.primary),
+          child: const Icon(Icons.restaurant_menu,
+              size: 50, color: AppTheme.background),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 18),
         const Text(
           'MEEZ POS',
           style: TextStyle(
-            color: Colors.white,
+            color: AppTheme.primary,
             fontSize: 28,
             fontWeight: FontWeight.w900,
             letterSpacing: 4,
           ),
         ),
         const SizedBox(height: 4),
-        Text(
+        const Text(
           'لوحة تحكم المطعم',
           style: TextStyle(
-            color: Colors.white.withAlpha(180),
+            color: AppTheme.textSecondary,
             fontSize: 13,
             letterSpacing: 1,
           ),
@@ -108,11 +109,11 @@ class _LoginScreenState extends State<LoginScreen> {
     return Container(
       constraints: const BoxConstraints(maxWidth: 420),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(40),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 30,
             offset: const Offset(0, 10),
           ),
@@ -138,9 +139,10 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: _emailCtrl,
               keyboardType: TextInputType.emailAddress,
               textDirection: TextDirection.ltr,
+              style: const TextStyle(color: AppTheme.textPrimary),
               decoration: const InputDecoration(
                 labelText: 'البريد الإلكتروني',
-                prefixIcon: Icon(Icons.email_outlined),
+                prefixIcon: Icon(Icons.email_outlined, color: AppTheme.textSecondary),
               ),
               validator: (v) =>
                   (v == null || !v.contains('@')) ? 'أدخل بريد إلكتروني صحيح' : null,
@@ -150,11 +152,16 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: _passCtrl,
               obscureText: _obscure,
               textDirection: TextDirection.ltr,
+              style: const TextStyle(color: AppTheme.textPrimary),
               decoration: InputDecoration(
                 labelText: 'كلمة المرور',
-                prefixIcon: const Icon(Icons.lock_outline),
+                prefixIcon: const Icon(Icons.lock_outline,
+                    color: AppTheme.textSecondary),
                 suffixIcon: IconButton(
-                  icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                  icon: Icon(
+                    _obscure ? Icons.visibility_off : Icons.visibility,
+                    color: AppTheme.textSecondary,
+                  ),
                   onPressed: () => setState(() => _obscure = !_obscure),
                 ),
               ),
@@ -166,18 +173,21 @@ class _LoginScreenState extends State<LoginScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.danger.withAlpha(20),
+                  color: AppTheme.danger.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.danger.withAlpha(80)),
+                  border:
+                      Border.all(color: AppTheme.danger.withValues(alpha: 0.5)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline, color: AppTheme.danger, size: 18),
+                    const Icon(Icons.error_outline,
+                        color: AppTheme.danger, size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         auth.error!,
-                        style: const TextStyle(color: AppTheme.danger, fontSize: 13),
+                        style:
+                            const TextStyle(color: AppTheme.danger, fontSize: 13),
                       ),
                     ),
                   ],
@@ -194,7 +204,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 22,
                         height: 22,
                         child: CircularProgressIndicator(
-                          color: Colors.white,
+                          color: AppTheme.background,
                           strokeWidth: 2.5,
                         ),
                       )

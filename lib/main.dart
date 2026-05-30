@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -13,7 +14,9 @@ import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  if (Platform.isAndroid || Platform.isIOS) {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  }
   await NotificationService().init();
   await FcmService().init();
   runApp(const MeezPosApp());
@@ -34,7 +37,12 @@ class MeezPosApp extends StatelessWidget {
         title: 'Meez POS',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.theme,
-        home: const _Splash(),
+        darkTheme: AppTheme.theme,
+        themeMode: ThemeMode.dark,
+        home: const Directionality(
+          textDirection: TextDirection.rtl,
+          child: _Splash(),
+        ),
       ),
     );
   }
@@ -76,24 +84,24 @@ class _SplashState extends State<_Splash> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      backgroundColor: AppTheme.primary,
+      backgroundColor: AppTheme.background,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.restaurant_menu, size: 72, color: Colors.white),
+            Icon(Icons.restaurant_menu, size: 72, color: AppTheme.primary),
             SizedBox(height: 16),
             Text(
               'MEEZ POS',
               style: TextStyle(
-                color: Colors.white,
+                color: AppTheme.primary,
                 fontSize: 26,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 4,
               ),
             ),
             SizedBox(height: 32),
-            CircularProgressIndicator(color: Colors.white54, strokeWidth: 2),
+            CircularProgressIndicator(color: AppTheme.primary, strokeWidth: 2),
           ],
         ),
       ),

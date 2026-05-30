@@ -33,10 +33,7 @@ class DefaultFirebaseOptions {
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -66,4 +63,15 @@ class DefaultFirebaseOptions {
     iosClientId: '1053943643595-at46p3ectdmnhrhgcr1s534s7b4nse3l.apps.googleusercontent.com',
     iosBundleId: 'com.example.meezResApp',
   );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyBDPpybrCUWG70Uw0SOhEvg407TPMySIAo',
+    appId: '1:1053943643595:web:958ed399cce697042fca4e',
+    messagingSenderId: '1053943643595',
+    projectId: 'brave-dimension-388220',
+    authDomain: 'brave-dimension-388220.firebaseapp.com',
+    storageBucket: 'brave-dimension-388220.appspot.com',
+    measurementId: 'G-7Z3FC1EWDQ',
+  );
+
 }

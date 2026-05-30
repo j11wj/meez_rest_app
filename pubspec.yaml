@@ -37,6 +37,7 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   audioplayers: ^6.1.0
   vibration: ^2.0.0
+  local_notifier: ^0.1.6
   firebase_core: ^3.15.2
   firebase_messaging: ^15.2.5
 
@@ -50,3 +51,8 @@ flutter:
   assets:
     - assets/images/
     - assets/sounds/
+    - assets/fonts/
+  fonts:
+    - family: LamaSans
+      fonts:
+        - asset: assets/fonts/LamaSans-SemiBold.ttf

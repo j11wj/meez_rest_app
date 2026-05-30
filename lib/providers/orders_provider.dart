@@ -22,7 +22,10 @@ class OrdersProvider extends ChangeNotifier {
   List<Order> get pendingOrders =>
       _orders.where((o) => o.status == 'PENDING').toList();
   List<Order> get activeOrders => _orders
-      .where((o) => o.status == 'ACCEPTED' || o.status == 'ON_THE_WAY')
+      .where((o) =>
+          o.status == 'RESTAURANT_ACCEPTED' ||
+          o.status == 'ACCEPTED' ||
+          o.status == 'ON_THE_WAY')
       .toList();
   List<Order> get doneOrders => _orders
       .where((o) => o.status == 'DELIVERED' || o.status == 'CANCELED')

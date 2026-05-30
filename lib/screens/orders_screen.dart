@@ -9,6 +9,7 @@ import '../providers/restaurant_provider.dart';
 import 'order_detail_screen.dart';
 import 'login_screen.dart';
 import 'settings_screen.dart';
+import 'request_driver_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -25,11 +26,21 @@ class _OrdersScreenState extends State<OrdersScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(_onTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadRestaurant());
+  }
+
+  void _onTabChanged() {
+    // refresh orders when switching to "منتهي" tab to catch socket-missed updates
+    if (_tabController.index == 2 && !_tabController.indexIsChanging) {
+      final auth = context.read<AuthProvider>();
+      context.read<OrdersProvider>().loadOrders(auth.token);
+    }
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
   }
@@ -98,9 +109,9 @@ class _OrdersScreenState extends State<OrdersScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white60,
+          indicatorColor: AppTheme.primary,
+          labelColor: AppTheme.primary,
+          unselectedLabelColor: AppTheme.textSecondary,
           tabs: [
             Tab(text: 'جديد (${orders.pendingOrders.length})'),
             Tab(text: 'جاري (${orders.activeOrders.length})'),
@@ -108,6 +119,15 @@ class _OrdersScreenState extends State<OrdersScreen>
             const Tab(icon: Icon(Icons.settings, size: 20)),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const RequestDriverScreen()),
+        ),
+        icon: const Icon(Icons.two_wheeler_rounded),
+        label: const Text('طلب سائق'),
+        backgroundColor: AppTheme.primaryCoral,
+        foregroundColor: AppTheme.offWhite,
       ),
       body: TabBarView(
         controller: _tabController,
@@ -287,7 +307,8 @@ class _OrderCard extends StatelessWidget {
   Color _statusColor(String s) {
     switch (s) {
       case 'PENDING': return AppTheme.warning;
-      case 'ACCEPTED': return AppTheme.primaryLight;
+      case 'RESTAURANT_ACCEPTED': return AppTheme.primaryLight;
+      case 'ACCEPTED': return Colors.blueGrey;
       case 'ON_THE_WAY': return Colors.teal;
       case 'DELIVERED': return AppTheme.success;
       case 'CANCELED': return AppTheme.danger;
@@ -297,8 +318,9 @@ class _OrderCard extends StatelessWidget {
 
   String _statusLabel(String s) {
     switch (s) {
-      case 'PENDING': return 'طلب جديد';
-      case 'ACCEPTED': return 'مقبول';
+      case 'PENDING': return 'جديد';
+      case 'RESTAURANT_ACCEPTED': return 'بانتظار السائق';
+      case 'ACCEPTED': return 'مع السائق';
       case 'ON_THE_WAY': return 'في الطريق';
       case 'DELIVERED': return 'تم التوصيل';
       case 'CANCELED': return 'ملغي';

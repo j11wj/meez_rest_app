@@ -6,6 +6,7 @@ class MyRestaurant {
   final String? image;
   final String? address;
   final String? phone;
+  final String? zoneId;
 
   MyRestaurant({
     required this.id,
@@ -15,6 +16,7 @@ class MyRestaurant {
     this.image,
     this.address,
     this.phone,
+    this.zoneId,
   });
 
   factory MyRestaurant.fromJson(Map<String, dynamic> j) => MyRestaurant(
@@ -25,6 +27,7 @@ class MyRestaurant {
         image: j['image'],
         address: j['address'],
         phone: j['phone'],
+        zoneId: j['zoneId'],
       );
 
   MyRestaurant copyWith({bool? isOpen, bool? isActive}) => MyRestaurant(
@@ -35,5 +38,6 @@ class MyRestaurant {
         image: image,
         address: address,
         phone: phone,
+        zoneId: zoneId,
       );
 }

@@ -154,7 +154,8 @@ class _StatusBanner extends StatelessWidget {
   Color _statusColor(String s) {
     switch (s) {
       case 'PENDING': return AppTheme.warning;
-      case 'ACCEPTED': return AppTheme.primaryLight;
+      case 'RESTAURANT_ACCEPTED': return AppTheme.primaryLight;
+      case 'ACCEPTED': return Colors.blueGrey;
       case 'ON_THE_WAY': return Colors.teal;
       case 'DELIVERED': return AppTheme.success;
       case 'CANCELED': return AppTheme.danger;
@@ -164,9 +165,10 @@ class _StatusBanner extends StatelessWidget {
 
   String _statusLabel(String s) {
     switch (s) {
-      case 'PENDING': return 'طلب جديد';
-      case 'ACCEPTED': return 'مقبول';
-      case 'ON_THE_WAY': return 'في الطريق';
+      case 'PENDING': return 'طلب جديد — بانتظار القبول';
+      case 'RESTAURANT_ACCEPTED': return 'مقبول — بانتظار السائق';
+      case 'ACCEPTED': return 'السائق في الطريق للمطعم';
+      case 'ON_THE_WAY': return 'السائق في الطريق للزبون';
       case 'DELIVERED': return 'تم التوصيل';
       case 'CANCELED': return 'ملغي';
       default: return s;
@@ -176,7 +178,8 @@ class _StatusBanner extends StatelessWidget {
   IconData _statusIcon(String s) {
     switch (s) {
       case 'PENDING': return Icons.notifications_active;
-      case 'ACCEPTED': return Icons.check_circle_outline;
+      case 'RESTAURANT_ACCEPTED': return Icons.restaurant;
+      case 'ACCEPTED': return Icons.directions_bike;
       case 'ON_THE_WAY': return Icons.delivery_dining;
       case 'DELIVERED': return Icons.done_all;
       case 'CANCELED': return Icons.cancel_outlined;
@@ -426,8 +429,8 @@ class _ActionButtons extends StatelessWidget {
   List<_Action> _availableActions(String status) {
     if (status == 'PENDING') {
       return [
-        _Action('ACCEPTED', 'قبول الطلب', Icons.check_circle, AppTheme.success),
-        _Action('CANCELED', 'إلغاء الطلب', Icons.cancel, AppTheme.danger),
+        _Action('RESTAURANT_ACCEPTED', 'قبول الطلب وإرسال للسائقين', Icons.check_circle, AppTheme.success),
+        _Action('CANCELED', 'رفض الطلب', Icons.cancel, AppTheme.danger),
       ];
     }
     return [];

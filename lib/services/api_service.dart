@@ -189,4 +189,56 @@ class ApiService {
       throw ApiException(body['message']?.toString() ?? 'Failed to delete item', res.statusCode);
     }
   }
+
+  // ── Zones ────────────────────────────────────────────────────────────────────
+
+  Future<List<Map<String, dynamic>>> getZones(String token) async {
+    final res = await http.get(
+      Uri.parse('$_base/zones'),
+      headers: _headers(token),
+    );
+    if (res.statusCode != 200) {
+      throw ApiException('فشل تحميل المناطق', res.statusCode);
+    }
+    final list = jsonDecode(res.body) as List<dynamic>;
+    return list.map((e) => e as Map<String, dynamic>).toList();
+  }
+
+  Future<List<Map<String, dynamic>>> getZonePricings(String token) async {
+    final res = await http.get(
+      Uri.parse('$_base/zones/pricing/all'),
+      headers: _headers(token),
+    );
+    if (res.statusCode != 200) return [];
+    final list = jsonDecode(res.body) as List<dynamic>;
+    return list.map((e) => e as Map<String, dynamic>).toList();
+  }
+
+  // ── Driver-only order ─────────────────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> requestDriverOnly({
+    required String token,
+    required String toZoneId,
+    required String customerName,
+    required String customerPhone,
+    required String customerAddress,
+    required String farePayedBy,
+  }) async {
+    final res = await http.post(
+      Uri.parse('$_base/orders/restaurant/request-driver'),
+      headers: _headers(token),
+      body: jsonEncode({
+        'toZoneId': toZoneId,
+        'customerName': customerName,
+        'customerPhone': customerPhone,
+        'customerAddress': customerAddress,
+        'farePayedBy': farePayedBy,
+      }),
+    );
+    final body = jsonDecode(res.body) as Map<String, dynamic>;
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      throw ApiException(body['message']?.toString() ?? 'فشل إرسال الطلب', res.statusCode);
+    }
+    return body;
+  }
 }
