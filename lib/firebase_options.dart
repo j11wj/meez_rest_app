@@ -28,10 +28,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
         return windows;
       case TargetPlatform.linux:
@@ -72,6 +69,16 @@ class DefaultFirebaseOptions {
     authDomain: 'brave-dimension-388220.firebaseapp.com',
     storageBucket: 'brave-dimension-388220.appspot.com',
     measurementId: 'G-7Z3FC1EWDQ',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyC3n6uUNfrxivZJ-i1Jb7R6OkZ97cBk6D8',
+    appId: '1:1053943643595:ios:7ac3dd952da80cc52fca4e',
+    messagingSenderId: '1053943643595',
+    projectId: 'brave-dimension-388220',
+    storageBucket: 'brave-dimension-388220.appspot.com',
+    iosClientId: '1053943643595-at46p3ectdmnhrhgcr1s534s7b4nse3l.apps.googleusercontent.com',
+    iosBundleId: 'com.example.meezResApp',
   );
 
 }

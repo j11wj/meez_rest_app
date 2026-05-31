@@ -16,8 +16,10 @@ class NotificationService {
   bool _initialized = false;
   Timer? _alertTimer;
 
-  bool get _isWindows => Platform.isWindows;
   bool get _isAndroid => Platform.isAndroid;
+  bool get _isMacOS => Platform.isMacOS;
+  bool get _isWindows => Platform.isWindows;
+  bool get _isDesktop => _isMacOS || _isWindows;
 
   Future<void> init() async {
     if (_initialized) return;
@@ -54,10 +56,10 @@ class NotificationService {
   }) async {
     await stopAlert();
 
+    // إشعار النظام
     try {
-      if (_isWindows) {
-        // Windows toast via PowerShell — no extra package needed
-        _showWindowsToast(
+      if (_isDesktop) {
+        _showDesktopNotification(
           'طلب جديد!',
           '$customerName — ${total.toStringAsFixed(0)} IQD',
         );
@@ -88,6 +90,7 @@ class NotificationService {
       }
     } catch (_) {}
 
+    // صوت + اهتزاز يتكرران كل 3 ثوانٍ لمدة 30 ثانية
     final stopAt = DateTime.now().add(const Duration(seconds: 30));
 
     Future<void> playOnce() async {
@@ -116,18 +119,31 @@ class NotificationService {
     });
   }
 
-  void _showWindowsToast(String title, String body) {
-    // Fire-and-forget PowerShell toast — no extra package needed
-    final script =
-        '[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType=WindowsRuntime] | Out-Null;'
-        '[Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom, ContentType=WindowsRuntime] | Out-Null;'
-        r'$xml = New-Object Windows.Data.Xml.Dom.XmlDocument;'
-        r'$xml.LoadXml("<toast><visual><binding template=""ToastGeneric"">'
-        '<text>$title</text><text>$body</text>'
-        r'</binding></visual></toast>");'
-        r'$toast = [Windows.UI.Notifications.ToastNotification]::new($xml);'
-        r'[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Meez POS").Show($toast);';
-    Process.run('powershell', ['-Command', script]);
+  void _showDesktopNotification(String title, String body) {
+    try {
+      if (_isMacOS) {
+        // macOS: osascript — لا يحتاج أي package
+        Process.run('osascript', [
+          '-e',
+          'display notification "$body" with title "$title" sound name "Glass"',
+        ]);
+      } else if (_isWindows) {
+        // Windows: PowerShell toast
+        final xml = '<toast><visual><binding template="ToastGeneric">'
+            '<text>$title</text><text>$body</text>'
+            '</binding></visual></toast>';
+        final script = '[Windows.UI.Notifications.ToastNotificationManager,'
+            'Windows.UI.Notifications,ContentType=WindowsRuntime]|Out-Null;'
+            '[Windows.Data.Xml.Dom.XmlDocument,'
+            'Windows.Data.Xml.Dom,ContentType=WindowsRuntime]|Out-Null;'
+            r'$x=New-Object Windows.Data.Xml.Dom.XmlDocument;'
+            '\$x.LoadXml(\'$xml\');'
+            r'[Windows.UI.Notifications.ToastNotificationManager]'
+            r'::CreateToastNotifier("Meez POS").Show('
+            r'[Windows.UI.Notifications.ToastNotification]::new($x));';
+        Process.run('powershell', ['-Command', script]);
+      }
+    } catch (_) {}
   }
 
   Future<void> stopAlert() async {
