@@ -218,6 +218,7 @@ class ApiService {
 
   Future<Map<String, dynamic>> requestDriverOnly({
     required String token,
+    required String fromZoneId,
     required String toZoneId,
     required String customerName,
     required String customerPhone,
@@ -228,6 +229,7 @@ class ApiService {
       Uri.parse('$_base/orders/restaurant/request-driver'),
       headers: _headers(token),
       body: jsonEncode({
+        'fromZoneId': fromZoneId,
         'toZoneId': toZoneId,
         'customerName': customerName,
         'customerPhone': customerPhone,

@@ -22,7 +22,9 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
 
   List<Map<String, dynamic>> _zones = [];
   List<Map<String, dynamic>> _pricings = [];
-  String? _selectedZoneId;
+
+  String? _fromZoneId;
+  String? _toZoneId;
   String _farePayedBy = 'CUSTOMER';
   bool _loading = true;
   bool _submitting = false;
@@ -48,9 +50,15 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
       final zones = await _api.getZones(token);
       final pricings = await _api.getZonePricings(token);
       if (!mounted) return;
+
+      // افتراضي: منطقة الانطلاق = منطقة المطعم
+      final restaurantZoneId =
+          context.read<RestaurantProvider>().restaurant?.zoneId;
+
       setState(() {
         _zones = zones;
         _pricings = pricings;
+        _fromZoneId = restaurantZoneId;
         _loading = false;
       });
     } catch (e) {
@@ -60,35 +68,33 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
     }
   }
 
-  void _onZoneChanged(String? zoneId) {
-    setState(() {
-      _selectedZoneId = zoneId;
-      _detectedFare = _getFare(zoneId);
-    });
-  }
-
-  double? _getFare(String? toZoneId) {
-    if (toZoneId == null) return null;
-    final restaurantZoneId =
-        context.read<RestaurantProvider>().restaurant?.zoneId;
+  void _recalcFare() {
+    if (_fromZoneId == null || _toZoneId == null) {
+      setState(() => _detectedFare = null);
+      return;
+    }
+    double? fare;
     for (final p in _pricings) {
-      final fromMatches = restaurantZoneId == null ||
-          p['fromZoneId'] == restaurantZoneId;
-      if (fromMatches && p['toZoneId'] == toZoneId) {
-        return (p['price'] as num?)?.toDouble();
+      if (p['fromZoneId'] == _fromZoneId && p['toZoneId'] == _toZoneId) {
+        fare = (p['price'] as num?)?.toDouble();
+        break;
       }
     }
-    return null;
+    setState(() => _detectedFare = fare);
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedZoneId == null) {
+    if (_fromZoneId == null) {
+      _showError('اختر منطقة الانطلاق');
+      return;
+    }
+    if (_toZoneId == null) {
       _showError('اختر منطقة الوجهة');
       return;
     }
     if (_detectedFare == null) {
-      _showError('لا يوجد سعر توصيل محدد لهذه المنطقة');
+      _showError('لا يوجد سعر توصيل محدد بين هاتين المنطقتين');
       return;
     }
 
@@ -97,7 +103,8 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
       final token = context.read<AuthProvider>().token;
       await _api.requestDriverOnly(
         token: token,
-        toZoneId: _selectedZoneId!,
+        fromZoneId: _fromZoneId!,
+        toZoneId: _toZoneId!,
         customerName: _nameCtrl.text.trim(),
         customerPhone: _phoneCtrl.text.trim(),
         customerAddress: _addressCtrl.text.trim(),
@@ -130,9 +137,7 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('طلب سائق توصيل'),
-        ),
+        appBar: AppBar(title: const Text('طلب سائق توصيل')),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
@@ -142,24 +147,102 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Zone selector
-                      _SectionTitle(title: 'منطقة الوجهة'),
-                      const SizedBox(height: 8),
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedZoneId,
-                        decoration: _inputDecoration('اختر المنطقة'),
-                        items: _zones
-                            .map((z) => DropdownMenuItem(
-                                  value: z['id'] as String,
-                                  child: Text(z['name'] as String? ?? ''),
-                                ))
-                            .toList(),
-                        onChanged: _onZoneChanged,
-                        validator: (v) => v == null ? 'اختر منطقة' : null,
+                      // ── من / إلى ──────────────────────────────────────────
+                      _SectionTitle(title: 'مسار التوصيل'),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.circle,
+                                        size: 10, color: AppTheme.success),
+                                    const SizedBox(width: 6),
+                                    Text('من',
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: AppTheme.textSecondary)),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                DropdownButtonFormField<String>(
+                                  initialValue: _fromZoneId,
+                                  decoration: _inputDecoration('منطقة الانطلاق'),
+                                  items: _zones
+                                      .map((z) => DropdownMenuItem(
+                                            value: z['id'] as String,
+                                            child: Text(
+                                              z['name'] as String? ?? '',
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ))
+                                      .toList(),
+                                  onChanged: (v) {
+                                    setState(() => _fromZoneId = v);
+                                    _recalcFare();
+                                  },
+                                  validator: (v) =>
+                                      v == null ? 'اختر منطقة' : null,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(8, 20, 8, 0),
+                            child: Icon(Icons.arrow_back_rounded,
+                                color: AppTheme.primary),
+                          ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.location_on,
+                                        size: 10, color: AppTheme.danger),
+                                    const SizedBox(width: 6),
+                                    Text('إلى',
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: AppTheme.textSecondary)),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                DropdownButtonFormField<String>(
+                                  initialValue: _toZoneId,
+                                  decoration: _inputDecoration('منطقة الوجهة'),
+                                  items: _zones
+                                      .map((z) => DropdownMenuItem(
+                                            value: z['id'] as String,
+                                            child: Text(
+                                              z['name'] as String? ?? '',
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ))
+                                      .toList(),
+                                  onChanged: (v) {
+                                    setState(() => _toZoneId = v);
+                                    _recalcFare();
+                                  },
+                                  validator: (v) =>
+                                      v == null ? 'اختر منطقة' : null,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      if (_selectedZoneId != null)
-                        Container(
+
+                      const SizedBox(height: 10),
+
+                      // سعر التوصيل
+                      if (_fromZoneId != null && _toZoneId != null)
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
@@ -188,7 +271,7 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
                               Text(
                                 _detectedFare != null
                                     ? 'أجرة التوصيل: ${_detectedFare!.toStringAsFixed(0)} IQD'
-                                    : 'لا يوجد سعر محدد لهذه المنطقة',
+                                    : 'لا يوجد سعر محدد بين هاتين المنطقتين',
                                 style: TextStyle(
                                   color: _detectedFare != null
                                       ? AppTheme.success
@@ -202,7 +285,7 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
 
                       const SizedBox(height: 20),
 
-                      // Customer info
+                      // ── معلومات العميل ────────────────────────────────────
                       _SectionTitle(title: 'معلومات العميل'),
                       const SizedBox(height: 8),
                       TextFormField(
@@ -216,21 +299,23 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
                         controller: _phoneCtrl,
                         decoration: _inputDecoration('رقم الهاتف'),
                         keyboardType: TextInputType.phone,
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'أدخل رقم الهاتف' : null,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'أدخل رقم الهاتف'
+                            : null,
                       ),
                       const SizedBox(height: 10),
                       TextFormField(
                         controller: _addressCtrl,
                         decoration: _inputDecoration('عنوان التوصيل'),
                         maxLines: 2,
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'أدخل العنوان' : null,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'أدخل العنوان'
+                            : null,
                       ),
 
                       const SizedBox(height: 20),
 
-                      // Who pays the fare
+                      // ── من يدفع ───────────────────────────────────────────
                       _SectionTitle(title: 'من يدفع أجرة التوصيل؟'),
                       const SizedBox(height: 8),
                       _FarePayerSelector(
@@ -247,10 +332,12 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
                                 width: 18,
                                 height: 18,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: AppTheme.background),
+                                    strokeWidth: 2,
+                                    color: AppTheme.background),
                               )
                             : const Icon(Icons.send_rounded),
-                        label: Text(_submitting ? 'جاري الإرسال...' : 'إرسال طلب السائق'),
+                        label: Text(
+                            _submitting ? 'جاري الإرسال...' : 'إرسال طلب السائق'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primary,
                           foregroundColor: AppTheme.background,
@@ -352,14 +439,16 @@ class _ChoiceTile extends StatelessWidget {
         child: Column(
           children: [
             Icon(icon,
-                color: selected ? AppTheme.background : AppTheme.textSecondary,
+                color:
+                    selected ? AppTheme.background : AppTheme.textSecondary,
                 size: 22),
             const SizedBox(height: 4),
             Text(
               label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: selected ? AppTheme.background : AppTheme.textSecondary,
+                color:
+                    selected ? AppTheme.background : AppTheme.textSecondary,
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),

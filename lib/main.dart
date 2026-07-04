@@ -14,9 +14,9 @@ import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (Platform.isAndroid || Platform.isIOS) {
+  // if (Platform.isAndroid || Platform.isIOS) {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  }
+  // }
   await NotificationService().init();
   await FcmService().init();
   runApp(const MeezPosApp());
