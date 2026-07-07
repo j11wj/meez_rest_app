@@ -74,10 +74,28 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
       return;
     }
     double? fare;
+    // السعر بين منطقتين عادة متماثل بالاتجاهين — جرّب الاتجاه المحدد ثم المعاكس
     for (final p in _pricings) {
       if (p['fromZoneId'] == _fromZoneId && p['toZoneId'] == _toZoneId) {
         fare = (p['price'] as num?)?.toDouble();
         break;
+      }
+    }
+    if (fare == null) {
+      for (final p in _pricings) {
+        if (p['fromZoneId'] == _toZoneId && p['toZoneId'] == _fromZoneId) {
+          fare = (p['price'] as num?)?.toDouble();
+          break;
+        }
+      }
+    }
+    // لا يوجد تسعير مخصص بين المنطقتين: إن كانتا نفس المنطقة استخدم سعرها الأساسي
+    if (fare == null && _fromZoneId == _toZoneId) {
+      for (final z in _zones) {
+        if (z['id'] == _fromZoneId) {
+          fare = (z['price'] as num?)?.toDouble();
+          break;
+        }
       }
     }
     setState(() => _detectedFare = fare);

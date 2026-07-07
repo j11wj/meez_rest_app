@@ -40,12 +40,15 @@ class OrdersProvider extends ChangeNotifier {
       if (!exists) {
         _orders.insert(0, newOrder);
         notifyListeners();
-        // إشعار + صوت + اهتزاز
-        _notif.notifyNewOrder(
-          orderId: newOrder.id,
-          customerName: newOrder.customer?.name ?? 'زبون',
-          total: newOrder.total,
-        );
+        // إشعار + صوت + اهتزاز — ما عدا طلبات "سائق فقط" (بدون أصناف طعام)
+        final isDriverOnly = orderData['orderType'] == 'DRIVER_ONLY';
+        if (!isDriverOnly) {
+          _notif.notifyNewOrder(
+            orderId: newOrder.id,
+            customerName: newOrder.customer?.name ?? 'زبون',
+            total: newOrder.total,
+          );
+        }
       }
     };
 
